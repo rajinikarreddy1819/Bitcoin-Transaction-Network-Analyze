@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Transaction Network Analyzer</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Plotly for charts -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar p-3">
+                <h3 class="mb-4">BTN Analyzer</h3>
+                <div class="mb-3">
+                    <h5>Data Upload</h5>
+                    <form id="upload-form" class="mb-3">
+                        <div class="form-group mb-3">
+                            <input type="file" class="form-control" id="file-input" accept=".csv">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="upload-btn">
+                            Upload Blockchain Transaction
+                        </button>
+                    </form>
+                </div>
+                <div class="mb-3">
+                    <h5>Analysis Tools</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-secondary" id="btn-build-btn" disabled>
+                            Parse & Build BTN Petrinet Simulation
+                        </button>
+                        <button class="btn btn-secondary" id="btn-pattern-matching" disabled>
+                            Run Pattern Matching Rules Algorithm
+                        </button>
+                        <button class="btn btn-secondary" id="btn-extension-rules" disabled>
+                            Extension Rules Matching from Cache
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h5>Visualization</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-dark" id="btn-withdraw-graph" disabled>
+                            Withdraw Transaction Graph
+                        </button>
+                        <button class="btn btn-outline-dark" id="btn-deposit-graph" disabled>
+                            Deposit Transaction Graph
+                        </button>
+                        <button class="btn btn-outline-dark" id="btn-propose-vs-extension" disabled>
+                            Propose vs Extension Comparison
+                        </button>
+                        <button class="btn btn-outline-dark" id="btn-pattern-summary" disabled>
+                            Pattern Summary Report
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-auto text-center text-muted">
+                    <small>Bitcoin Transaction Network Analysis v1.0</small>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4 py-3">
+                <div class="alert alert-info d-none" id="alert-container"></div>
+                
+                <!-- Loading spinner -->
+                <div class="text-center py-5 d-none" id="loading-container">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2" id="loading-text">Processing...</p>
+                </div>
+                
+                <!-- Results container -->
+                <div class="row" id="results-container">
+                    <!-- Status panel -->
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">System Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center border rounded p-3 mb-3">
+                                            <h6>Transactions</h6>
+                                            <h3 id="transactions-count">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center border rounded p-3 mb-3">
+                                            <h6>Addresses</h6>
+                                            <h3 id="addresses-count">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center border rounded p-3 mb-3">
+                                            <h6>Suspected</h6>
+                                            <h3 id="suspected-count">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center border rounded p-3 mb-3">
+                                            <h6>Processing Time</h6>
+                                            <h3 id="processing-time">0s</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart container -->
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0" id="chart-title">Visualization</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="chart-container" style="height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Suspected addresses table -->
+                    <div class="col-12">
+                        <div class="card" id="suspected-card">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">Suspected Addresses</h5>
+                                <p class="text-white-50 mb-0 small">Click on an address row to view detailed transaction information</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Address</th>
+                                                <th>Reason</th>
+                                                <th>Received</th>
+                                                <th>Balance</th>
+                                                <th>In Degree</th>
+                                                <th>Out Degree</th>
+                                                <th>Risk Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="suspected-table-body">
+                                            <!-- Suspected addresses will be dynamically inserted here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 
