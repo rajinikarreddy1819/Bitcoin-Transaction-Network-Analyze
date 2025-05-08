@@ -1,4 +1,5 @@
-# Bitcoin Transaction Network (BTN) Analyzer
+# Blockchain Forensics: Bitcoin Transaction Analysis Framework For Future Digital Forensics
+
 
 A forensic investigation tool for analyzing Bitcoin transactions using an extended Safe Petri Net model.
 
